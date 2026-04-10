@@ -1,3 +1,5 @@
+import java.io.File
+
 /************************************************************
  * Name: DJ Harrison
  * Date: 4/10/2026
@@ -6,19 +8,50 @@
  * Description: search through a data file using regular expressions
  ************************************************************/
 
-//TODO: Write code to import the file
-//TODO: Write RegEx to search the file for two fields (Department & Class Number)
-//TODO: Search function should output the course title + all trailing lines until the next course
-
-//  Example file output:
-/*
-FOOT ITEM DEPT COURSE  CLUSTER ADMIN  COURSE          CR     INSTR     BLDG                  START  END   CLASS
-NOTE NUM_ _DIV_ NUM_SECT _ID_  UNIT___TITLE____ _CR_EQUIV ___NAME_____ NUM _ROOM ___DAYS___ _TIME_ _TIME_ _CAP_  _ENR_ OPEN_ FTES
-     0516 ABF   243  AN        CJ  ADV UNIBODY   6.0  6.0 ChristensenE 018 0155  F           7:30A  8:30A    20     20     0  8.0
-                                                          ChristensenE 018 0155  MTW         9:30A 10:30A
-                                                          ChristensenE 018 0155  DAILY       8:30A  9:30A
-*/
 
 fun main() {
-    print("Hello World")
+
+    val fileName = "res/Enrollment.txt"
+    val lines = File(fileName).readLines()
+    var loop = true
+    while(loop) {
+        print("Department Name: ")
+        val department = readln().uppercase()
+        if (department == "EXIT"){
+            loop = false
+            continue
+        }
+        print("Class Number: ")
+        val classNumber = readln()
+        println()
+//        Regex pattern to look for classes with [user input] department and class number
+        val primaryMatchPattern = """(?<=\d{3}\s)((${department}&?[^\S\r\n]*?${classNumber})(?=[^\S\r\n]+))""".toRegex()
+//        Regex to match all classes (with lookahead and lookbehind to avoid false-positives). Also look for blank lines
+//        or for other junk lines:
+        val secondaryMatchPattern = """(?<=\d{3}\s)(([A-Z]{2,5}&?[^\S\r\n]*?\d{3})(?=[^\S\r\n]+))|^[\s-_]*$""".toRegex()
+//        print column headers from input file
+        println(lines[4])
+        println(lines[5])
+//        Loop through file, beginning with first real data line
+        for(i in 7..<lines.size){
+//            Check each line for primary regex match & print it if found
+            val matchResult = primaryMatchPattern.find(lines[i])
+            if (matchResult != null){
+                println(lines[i])
+//                Check lines following primary match for additional associated lines. Stop at next class or junk line
+                for (extraLine in i+1..<lines.size) {
+                    val secondaryMatch = secondaryMatchPattern.find(lines[extraLine])
+                    if (secondaryMatch == null ){
+                        println(lines[extraLine])
+                    } else { break }
+                }
+            }
+        }
+        print("\n--- Press Enter to continue ---")
+        readln()
+        println("\n\n")
+
+    }
+
+
 }
